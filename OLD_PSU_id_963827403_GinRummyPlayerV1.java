@@ -10,7 +10,7 @@ import java.util.*;
  
  
 public class OLD_PSU_id_963827403_GinRummyPlayerV1 implements GinRummyPlayer {
-    private int playerNum;
+        private int playerNum;
     @SuppressWarnings("unused")
     private int startingPlayerNum;
     private ArrayList<Card> cards = new ArrayList<Card>();
@@ -18,12 +18,20 @@ public class OLD_PSU_id_963827403_GinRummyPlayerV1 implements GinRummyPlayer {
     private boolean opponentKnocked = false;
     Card faceUpCard, drawnCard;
     ArrayList<Long> drawDiscardBitstrings = new ArrayList<Long>();
+    Stack<Card> deck = Card.getShuffle(617);
+    int turns = 0;
+
+
+    ArrayList<Card> entireDeck = new ArrayList<Card>(deck);
 
     //Create additional data structures to help with new functionalities
 
     //lists to reference edges and middle pieces by rank
     List<String> edges = Arrays.asList("A", "2", "3", "J", "Q", "K");
     List<String> middles = Arrays.asList("4", "5", "6", "7", "8", "9");
+
+    List<String> highest = Arrays.asList("10", "J", "Q", "K");
+
 
     int k = 1;
 
@@ -65,6 +73,10 @@ public class OLD_PSU_id_963827403_GinRummyPlayerV1 implements GinRummyPlayer {
 
     int round = 0;
 
+    Helper h = new Helper();
+
+    ArrayList<Card> allCards = new ArrayList<Card>();
+
 
     @Override
     public void startGame(int playerNum, int startingPlayerNum, Card[] cards) {
@@ -87,14 +99,44 @@ public class OLD_PSU_id_963827403_GinRummyPlayerV1 implements GinRummyPlayer {
 
     @Override
     public boolean willDrawFaceUpCard(Card card) {
+        
+        //Simple Player algorithm:
+        
         // Return true if card would be a part of a meld, false otherwise.
         this.faceUpCard = card;
         @SuppressWarnings("unchecked")
         ArrayList<Card> newCards = (ArrayList<Card>) cards.clone();
+
+        ArrayList<Card> allCards = (ArrayList<Card>) cards.clone();
+
         newCards.add(card);
+        onlyDeadwood = (ArrayList<Card>) newCards.clone();
         bestify = GinRummyUtil.cardsToBestMeldSets(newCards);
 
-/*
+        // Discard a random card (not just drawn face up) leaving minimal deadwood points.
+        int minDeadwood = Integer.MAX_VALUE;
+        ArrayList<Card> candidateCards = new ArrayList<Card>();
+
+        for (Card c : newCards) {
+            ArrayList<Card> remainingCards = (ArrayList<Card>) newCards.clone();
+            remainingCards.remove(card);
+            ArrayList<ArrayList<ArrayList<Card>>> bestMeldSets = GinRummyUtil.cardsToBestMeldSets(remainingCards);
+            int deadwood = bestMeldSets.isEmpty() ? GinRummyUtil.getDeadwoodPoints(remainingCards) : GinRummyUtil.getDeadwoodPoints(bestMeldSets.get(0), remainingCards);
+            if (deadwood <= minDeadwood) {
+                if (deadwood < minDeadwood) {
+                    minDeadwood = deadwood;
+                    candidateCards.clear();
+                }
+                candidateCards.add(c);
+            }
+        }
+
+
+     //Self-Created algorithm: 
+        
+        boolean draw = false;
+     
+        //finds deadwood (not used):
         for (Card s : cards) {  //eliminate melded cards
             for (int i = 0; i < bestify.size(); i++) {
                 for (int x = 0; x < bestify.get(i).size(); x++) {
@@ -104,32 +146,28 @@ public class OLD_PSU_id_963827403_GinRummyPlayerV1 implements GinRummyPlayer {
                 }
             }
         }
-int max_rank = -1;
-        Card highest = card;
-        for(Card x: onlyDeadwood)
-            if(x.rank>0) {
-                max_rank = x.rank;
-                highest = x;
-            }
-        if(highest.rank > card.rank)
-            true;
-        else
-            return false;
-*/
 
-
+        
+//if card fits into best meld return true:
         for (int i = 0; i < bestify.size(); i++) {
             for (int x = 0; x < bestify.get(i).size(); x++) {
                 // for (int z = 0; z < bestify.get(i).size(); z++) {
                 if ((bestify.get(i).get(x).contains(card)))
-                    return true;
+                    draw = true;
             }
         }
-        return false;
+     
+//if drawing add it to allCards hand
+if(draw)
+    allCards.add(card);
+
+        return draw;
     }
 
+ 
     @Override
     public void reportDraw(int playerNum, Card drawnCard) {
+     
         // Ignore other player draws.  Add to cards if playerNum is this player.
         if (playerNum == this.playerNum) {
             cards.add(drawnCard);
@@ -151,19 +189,23 @@ int max_rank = -1;
             //     lowdraw = false;
             //        ------------This did NOT work. Please ignore.--------
 
-
         }
 
-
+    
+ //Game State Updates: 
+     
+     //add to otherCards if other player drew
         if (playerNum != this.playerNum)
             otherCards.add(drawnCard);
 
 
-        //decrease face down card count by 1
+     
+     //decrease face down card count by 1
         if (count > 2)
             count--;
 
-        if (!(seen.contains(drawnCard)))
+     //add to seen if not already seen
+        if (!(seen.contains(drawnCard)) && drawnCard!=null)
             seen.add(drawnCard);
 
 
@@ -172,7 +214,8 @@ int max_rank = -1;
     @SuppressWarnings("unchecked")
     @Override
     public Card getDiscard() {
-        int turns = 0;
+     
+     //From Simple Player:
         // Discard a random card (not just drawn face up) leaving minimal deadwood points.
         int minDeadwood = Integer.MAX_VALUE;
         ArrayList<Card> candidateCards = new ArrayList<Card>();
@@ -196,7 +239,7 @@ int max_rank = -1;
                     minDeadwood = deadwood;
                     candidateCards.clear();
                 }
-                candidateCards.add(card);
+                candidateCards.add(card); //this array is used in next part
             }
         }
         Card discard = candidateCards.get(random.nextInt(candidateCards.size()));
@@ -204,6 +247,9 @@ int max_rank = -1;
         CandidateCardsWithMatches.clear();
 
 
+
+     //Self-created Strategy
+     
         //create variables to store information about how helpful a candidate card might be to create a future meld
         float rank_matches = 0;
         float suit_matches = 0;
@@ -211,7 +257,7 @@ int max_rank = -1;
         float total_matches = 0;
 
 
-        //for each candidate card assess how helpdul it would be to create a future meld
+        //for each candidate card assess how helpful it would be to create a future meld
         for (Card cands : candidateCards) {
             rank_matches = 0;
             suit_matches = 0;
@@ -227,12 +273,17 @@ int max_rank = -1;
                         seq_matches += 1.4; //same suit and within 2 ranks (helps with runs) but worth only half as much
                 }
             }
-            //combine relevant parameters into one aggregate
+         
+            //combine relevant parameters into one aggregate for how helpful the card is
             total_matches = rank_matches + seq_matches;
 
-            //store key value pairs into map
+            //store key (card, total_matches) value pairs into map
             CandidateCardsWithMatches.put(cands, total_matches);
 
+         
+         
+         
+        //        ------------This did NOT work. Please ignore.--------
 
             //  if (turns > (new Random().nextInt(2))) {
             // if a candidate key is an edge card, set it to discard for now, will be overrided later if needed
@@ -259,8 +310,13 @@ int max_rank = -1;
         // if(low.contains(Card.rankNames[discard.rank]))
         //  discard = candidateCards.get(random.nextInt(candidateCards.size()));
 
+    
+             //        ------------This did NOT work. Please ignore.--------
+     
+     
 
-//find the card that is least likely to form a future meld . . .
+
+//find the card that is least likely to form a future meld (i.e. has lowest total_matches) . . .
         Map.Entry<Card, Float> minEntry = null;
         for (Map.Entry<Card, Float> entry : CandidateCardsWithMatches.entrySet()) {
             if (minEntry == null || entry.getValue().compareTo(minEntry.getValue()) < 0) {
@@ -271,11 +327,11 @@ int max_rank = -1;
         // . . . and discard it
         for (Card candids : candidateCards) {
             if ((CandidateCardsWithMatches.get(candids)) == minEntry.getValue()) {
-                discard = candids;
+                discard = candids; //set to discard
             }
 
 
-        }
+        
 
 
         // Prevent future repeat of draw, discard pair.
