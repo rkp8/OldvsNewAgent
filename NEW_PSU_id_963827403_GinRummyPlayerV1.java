@@ -142,8 +142,6 @@ public class NEW_PSU_id_963827403_GinRummyPlayerV1 implements GinRummyPlayer {
         }
 
 
-
-        //New algorithm:
         
         boolean draw = false;
 
@@ -176,6 +174,7 @@ if(draw)
 
     @Override
     public void reportDraw(int playerNum, Card drawnCard) {
+     
         // Ignore other player draws.  Add to cards if playerNum is this player.
         if (playerNum == this.playerNum) {
             cards.add(drawnCard);
@@ -197,18 +196,22 @@ if(draw)
             //     lowdraw = false;
             //        ------------This did NOT work. Please ignore.--------
 
-
         }
 
-
+    
+ //Game State Updates: 
+     
+     //add to otherCards if other player drew
         if (playerNum != this.playerNum)
             otherCards.add(drawnCard);
 
 
-        //decrease face down card count by 1
+     
+     //decrease face down card count by 1
         if (count > 2)
             count--;
 
+     //add to seen if not already seen
         if (!(seen.contains(drawnCard)) && drawnCard!=null)
             seen.add(drawnCard);
 
@@ -218,6 +221,8 @@ if(draw)
     @SuppressWarnings("unchecked")
     @Override
     public Card getDiscard() {
+     
+     //From Simple Player:
         // Discard a random card (not just drawn face up) leaving minimal deadwood points.
         int minDeadwood = Integer.MAX_VALUE;
         ArrayList<Card> candidateCards = new ArrayList<Card>();
@@ -241,7 +246,7 @@ if(draw)
                     minDeadwood = deadwood;
                     candidateCards.clear();
                 }
-                candidateCards.add(card);
+                candidateCards.add(card); //this array is used in next part
             }
         }
         Card discard = candidateCards.get(random.nextInt(candidateCards.size()));
@@ -250,6 +255,8 @@ if(draw)
 
 
 
+     //Self-created Strategy
+     
         //create variables to store information about how helpful a candidate card might be to create a future meld
         float rank_matches = 0;
         float suit_matches = 0;
@@ -257,7 +264,7 @@ if(draw)
         float total_matches = 0;
 
 
-        //for each candidate card assess how helpdul it would be to create a future meld
+        //for each candidate card assess how helpful it would be to create a future meld
         for (Card cands : candidateCards) {
             rank_matches = 0;
             suit_matches = 0;
@@ -273,10 +280,11 @@ if(draw)
                         seq_matches += 1.4; //same suit and within 2 ranks (helps with runs) but worth only half as much
                 }
             }
-            //combine relevant parameters into one aggregate
+         
+            //combine relevant parameters into one aggregate for how helpful the card is
             total_matches = rank_matches + seq_matches;
 
-            //store key value pairs into map
+            //store key (card, total_matches) value pairs into map
             CandidateCardsWithMatches.put(cands, total_matches);
 
 
@@ -306,7 +314,7 @@ if(draw)
         //  discard = candidateCards.get(random.nextInt(candidateCards.size()));
 
 
-//find the card that is least likely to form a future meld . . .
+//find the card that is least likely to form a future meld (i.e. has lowest total_matches) . . .
         Map.Entry<Card, Float> minEntry = null;
         for (Map.Entry<Card, Float> entry : CandidateCardsWithMatches.entrySet()) {
             if (minEntry == null || entry.getValue().compareTo(minEntry.getValue()) < 0) {
@@ -317,7 +325,7 @@ if(draw)
         // . . . and discard it
         for (Card candids : candidateCards) {
             if ((CandidateCardsWithMatches.get(candids)) == minEntry.getValue()) {
-                discard = candids;
+                discard = candids; //set to discard
             }
 
 
@@ -330,7 +338,8 @@ if(draw)
         ArrayList<ArrayList<Card>> melds = new ArrayList<ArrayList<Card>>();*/
 
 
-        
+     
+    //Create new array for use in Helper Methods:
 ArrayList<Card> newCands = new ArrayList<Card>();
 
 //create new array with all the best discard options
