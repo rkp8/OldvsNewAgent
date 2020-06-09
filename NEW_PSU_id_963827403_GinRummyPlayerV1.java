@@ -4,9 +4,15 @@ mport java.util.*;
 /**
  * NEW AGENT
  
-USES Helper Methods: changeinDeadwood, helpsopponent, avgdeadwood, etc.
+USES Helper Methods: changeinDeadwood, helpsopponent, avgdeadwood, etc 
 
-but no significant change in win rate compared to old agent
+* about mid-way through the getDiscard() method
+
+
+No significant change in win rate compared to old agent
+
+Helper Class and method implementations are at the bottom
+
  */
  
  
