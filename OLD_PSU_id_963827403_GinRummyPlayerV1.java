@@ -9,7 +9,7 @@ import java.util.*;
  
  
  
-public class Old_PSU_id_963827403_GinRummyPlayerV1 implements GinRummyPlayer {
+public class OLD_PSU_id_963827403_GinRummyPlayerV1 implements GinRummyPlayer {
     private int playerNum;
     @SuppressWarnings("unused")
     private int startingPlayerNum;
