@@ -13,7 +13,7 @@ but no significant change in win rate compared to old agent
  
  
  
-public class NewPSU_id_963827403_GinRummyPlayerV1 implements GinRummyPlayer {
+public class NEW_PSU_id_963827403_GinRummyPlayerV1 implements GinRummyPlayer {
     private int playerNum;
     @SuppressWarnings("unused")
     private int startingPlayerNum;
